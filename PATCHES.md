@@ -7,3 +7,5 @@ is the `MonoMod.Common` submodule revision documented in
 
 Consumers must initialize the submodule and build from source. Do not reproduce
 the compatibility fix as a post-build change to `MonoMod.Utils.dll`.
+The public fork resolves `MonoMod.Common` from `LemonLoaderX/MonoMod.Common` so
+the recorded gitlink always has a reproducible source repository.
