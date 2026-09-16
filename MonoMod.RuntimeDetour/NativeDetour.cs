@@ -292,7 +292,13 @@ namespace MonoMod.RuntimeDetour {
                 ExceptionHandler eh = new ExceptionHandler(ExceptionHandlerType.Finally);
                 il.Body.ExceptionHandlers.Add(eh);
 
+                // The emitted restore/reapply path needs the same code publication
+                // as Undo/Apply. ARM can otherwise execute stale jump instructions
+                // while reading the restored prologue as their target literal.
+                EmitCodeMemoryCall(il, _Data, nameof(IDetourNativePlatform.MakeWritable));
                 il.EmitDetourCopy(_BackupNative, _Data.Method, _Data.Type);
+                EmitCodeMemoryCall(il, _Data, nameof(IDetourNativePlatform.MakeExecutable));
+                EmitCodeMemoryCall(il, _Data, nameof(IDetourNativePlatform.FlushICache));
 
                 // Store the return value in a local as we can't preserve the stack across exception block boundaries.
                 VariableDefinition localResult = null;
@@ -323,7 +329,10 @@ namespace MonoMod.RuntimeDetour {
                 int instriFinallyStart = il.Body.Instructions.Count;
 
                 // Reapply the detour even if the method threw an exception.
+                EmitCodeMemoryCall(il, _Data, nameof(IDetourNativePlatform.MakeWritable));
                 il.EmitDetourApply(_Data);
+                EmitCodeMemoryCall(il, _Data, nameof(IDetourNativePlatform.MakeExecutable));
+                EmitCodeMemoryCall(il, _Data, nameof(IDetourNativePlatform.FlushICache));
 
                 // il.EndExceptionBlock();
                 int instriFinallyEnd = il.Body.Instructions.Count;
@@ -347,6 +356,14 @@ namespace MonoMod.RuntimeDetour {
 
                 return dmd.Generate();
             }
+        }
+
+        private static void EmitCodeMemoryCall(ILProcessor il, NativeDetourData data, string operation) {
+            il.Emit(OpCodes.Call, typeof(DetourHelper).GetProperty(nameof(DetourHelper.Native)).GetGetMethod());
+            il.Emit(OpCodes.Ldc_I8, (long) data.Method);
+            il.Emit(OpCodes.Conv_I);
+            il.Emit(OpCodes.Ldc_I4, (int) data.Size);
+            il.Emit(OpCodes.Callvirt, typeof(IDetourNativePlatform).GetMethod(operation));
         }
 
         /// <summary>
