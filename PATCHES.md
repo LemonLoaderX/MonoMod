@@ -1,7 +1,7 @@
 # CoreCLR compatibility source
 
 This branch is based on upstream commit
-`8fea48428622be858dd4f48b20ba1bf96ba09894`. Its source dependency changes
+`34fa90162b0bc2a3317e9bd846a60bcbbe5c8205` on upstream master. Its source dependency changes
 include the `MonoMod.Common` submodule revision documented in
 [`MonoMod.Common/PATCHES.md`](MonoMod.Common/PATCHES.md).
 
