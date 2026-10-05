@@ -25,3 +25,18 @@ The regression and build commands are in
 [`tests/NativeTrampoline/README.md`](tests/NativeTrampoline/README.md).
 This preserves the existing undo-call-redo design; it does not make concurrent
 execution or concurrent changes to the same native function safe.
+
+## ARM64 CoreCLR method entrypoints
+
+The source fork's page-precode and .NET 11 JIT adaptations are documented in
+[`MonoMod.Common/PATCHES.md`](MonoMod.Common/PATCHES.md). Validate template decoding
+with `dotnet run --project tests/Arm64Precode/Arm64Precode.csproj -c Release` after
+building RuntimeDetour as above. The fixtures cover 4/8/16/32/64 KiB offsets,
+unprepared and null targets, wrong MethodDesc ownership, adapter rejection and
+installed detours. They do not execute ARM instructions or qualify JIT callbacks;
+The host fixture also checks JIT callback forwarding, pinned identity, error-state
+preservation, nested compilation, failing subscribers/writers and final-Unpin
+publication races using a synthetic compiler. It does not write .NET 11 MethodDesc
+flags on its .NET 10 host. The factory's process-lifetime hook owner prevents
+repeat selection from installing another callback or losing managed delegate roots.
+Loader's Android smoke Mod exercises actual method patching and recompilation.
