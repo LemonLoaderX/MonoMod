@@ -40,3 +40,12 @@ publication races using a synthetic compiler. It does not write .NET 11 MethodDe
 flags on its .NET 10 host. The factory's process-lifetime hook owner prevents
 repeat selection from installing another callback or losing managed delegate roots.
 Loader's Android smoke Mod exercises actual method patching and recompilation.
+
+Android consumers first run `scripts/build-android-exception-helper.ps1` with
+`AndroidNdkRoot` and `OutputPath`, then pass that output as
+`-p:NativeExceptionHelperPath=<helper.so>` when building RuntimeDetour. The helper
+is embedded in the assembly; it is not an additional installed runtime input.
+The script targets API26 ARM64 and 16 KiB ELF alignment. Other builds can omit
+the input, but cannot install this POSIX ARM64 JIT callback without it. The device
+smoke includes missing-method compilation and invalid-IL rejection as well as
+successful patch/unpatch, because native exceptions must traverse the hook.

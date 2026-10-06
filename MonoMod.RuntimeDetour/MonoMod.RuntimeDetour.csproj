@@ -30,4 +30,7 @@
   <ItemGroup>
     <Compile Include="..\MonoMod.Common\RuntimeDetour\**\*.cs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(NativeExceptionHelperPath)' != ''">
+    <EmbeddedResource Include="$(NativeExceptionHelperPath)" LogicalName="MonoMod.RuntimeDetour.NativeExceptionHelper.so" />
+  </ItemGroup>
 </Project>
