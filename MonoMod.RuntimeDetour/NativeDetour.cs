@@ -198,6 +198,25 @@ namespace MonoMod.RuntimeDetour {
             DetourHelper.Native.Free(oldData);
         }
 
+        internal void ChangeSource(IntPtr newSource, IntPtr writableSource) {
+            if (newSource == writableSource) {
+                ChangeSource(newSource);
+                return;
+            }
+            if (!IsValid)
+                throw new ObjectDisposedException(nameof(NativeDetour));
+            NativeDetourData oldData = _Data;
+            _Data = DetourHelper.Native.Create(newSource, _Data.Target);
+            // CoreCLR publishes this buffer after the JIT returns. Keep the
+            // executable address for Undo, but patch and back up the RW alias.
+            DetourHelper.Native.Copy(writableSource, _BackupNative, _Data.Type);
+            NativeDetourData writableData = _Data;
+            writableData.Method = writableSource;
+            DetourHelper.Native.Apply(writableData);
+            IsApplied = true;
+            DetourHelper.Native.Free(oldData);
+        }
+
         /// <summary>
         /// Changed the target of this native detour to a new target.
         /// </summary>

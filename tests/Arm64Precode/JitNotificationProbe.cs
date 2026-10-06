@@ -10,6 +10,7 @@ internal static class JitNotificationProbe {
     private static int result;
     private static bool nested;
     private static Compile callback;
+    private static Action duringCompilation;
     private static int Target(int value) => value + 1;
 
     public static void Run(DetourRuntimeNET110Platform platform) {
@@ -63,12 +64,21 @@ internal static class JitNotificationProbe {
             compile(new IntPtr(1), IntPtr.Zero, request, 0, out _, out _);
             if (notifications != 2)
                 throw new Exception("Unpinned method produced a notification.");
+            duringCompilation = () => platform.Pin(target);
+            compile(new IntPtr(1), IntPtr.Zero, request, 0, out _, out _);
+            if (notifications != 3)
+                throw new Exception("Pinning during compilation lost its notification.");
+            duringCompilation = () => platform.Unpin(target);
+            compile(new IntPtr(1), IntPtr.Zero, request, 0, out _, out _);
+            if (notifications != 3)
+                throw new Exception("Final Unpin during compilation produced a stale notification.");
         } finally {
             writer.SetValue(null, previousWriter);
             if (platform.GetPin(target).Count != 0)
                 platform.Unpin(target);
             Marshal.FreeHGlobal(request);
             callback = null;
+            duringCompilation = null;
         }
         Console.WriteLine("JIT_NOTIFICATION_PASS forwarding, pinned identity, error state, reentrancy and observer/log failure containment");
     }
@@ -78,6 +88,9 @@ internal static class JitNotificationProbe {
             nested = false;
             callback(jit, info, method, flags, out _, out _);
         }
+        var action = duringCompilation;
+        duringCompilation = null;
+        action?.Invoke();
         Marshal.SetLastPInvokeError(0xCC);
         entry = new IntPtr(0x23456700);
         size = 32;

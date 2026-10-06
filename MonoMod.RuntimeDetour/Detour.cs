@@ -7,6 +7,7 @@ using Mono.Cecil.Cil;
 using System.Linq;
 using System.Collections.ObjectModel;
 using System.Threading;
+using MonoMod.RuntimeDetour.Platforms;
 #if !NET35
 using System.Collections.Concurrent;
 #endif
@@ -412,6 +413,10 @@ namespace MonoMod.RuntimeDetour {
 
         private static int compileMethodSubscribed = 0;
         private static void _OnCompileMethod(MethodBase method, IntPtr codeStart, ulong codeLen) {
+            _OnCompileMethod(method, codeStart, codeStart, codeLen);
+        }
+
+        private static void _OnCompileMethod(MethodBase method, IntPtr codeStart, IntPtr writableCodeStart, ulong codeLen) {
             if (method == null)
                 return;
 
@@ -420,14 +425,17 @@ namespace MonoMod.RuntimeDetour {
                 Detour top = detours.FindLast(d => d.IsTop);
                 /*top?._TopUndo();
                 top?._TopApply();*/
-                top?._TopDetour?.ChangeSource(codeStart);
+                top?._TopDetour?.ChangeSource(codeStart, writableCodeStart);
             }
         }
 
         private static void _RefreshChain(MethodBase method) {
             // ensure we're subscribed to the event before doing anything
             if (Interlocked.CompareExchange(ref compileMethodSubscribed, 1, 0) == 0) {
-                DetourHelper.Runtime.OnMethodCompiled += _OnCompileMethod;
+                if (DetourHelper.Runtime is DetourRuntimeNET110Platform platform)
+                    platform.OnMethodCompiledWithWritableCode += _OnCompileMethod;
+                else
+                    DetourHelper.Runtime.OnMethodCompiled += _OnCompileMethod;
             }
 
             MMDbgLog.Log($"detours applying for {method.GetID()}");

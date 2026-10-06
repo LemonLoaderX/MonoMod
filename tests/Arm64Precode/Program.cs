@@ -51,6 +51,7 @@ internal static class Program {
         var platform = new PinRaceProbe.PausingPlatform();
         JitNotificationProbe.Run(platform);
         PinRaceProbe.Run(platform);
+        PublicationProbe.Run();
     }
 
     private static void WriteFixup(IntPtr code, int page) {

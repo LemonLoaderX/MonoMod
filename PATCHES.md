@@ -49,3 +49,6 @@ The script targets API26 ARM64 and 16 KiB ELF alignment. Other builds can omit
 the input, but cannot install this POSIX ARM64 JIT callback without it. The device
 smoke includes missing-method compilation and invalid-IL rejection as well as
 successful patch/unpatch, because native exceptions must traverse the hook.
+The same helper carries the known-GUID native ICorJitInfo forwarding table and
+allocation capture. The host PublicationProbe simulates RW-to-RX publication and
+checks both surviving patch bytes and restoration of the original code on Undo.
