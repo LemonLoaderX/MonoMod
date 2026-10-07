@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <MonoModBinaryDirectory Condition="'$(MonoModBinaryDirectory)' == ''">../../MonoMod.RuntimeDetour/bin/Release/net5.0</MonoModBinaryDirectory>
   </PropertyGroup>
   <ItemGroup>

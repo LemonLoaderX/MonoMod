@@ -52,6 +52,7 @@ internal static class Program {
         JitNotificationProbe.Run(platform);
         PinRaceProbe.Run(platform);
         PublicationProbe.Run();
+        MethodFlagsProbe.Run();
     }
 
     private static void WriteFixup(IntPtr code, int page) {

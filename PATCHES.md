@@ -37,7 +37,9 @@ installed detours. They do not execute ARM instructions or qualify JIT callbacks
 The host fixture also checks JIT callback forwarding, pinned identity, error-state
 preservation, nested compilation, failing subscribers/writers and final-Unpin
 publication races using a synthetic compiler. It does not write .NET 11 MethodDesc
-flags on its .NET 10 host. The factory's process-lifetime hook owner prevents
+flags on its .NET 10 host. A separate MethodFlagsProbe calls the production atomic
+helper against synthetic aligned storage while another thread updates runtime flags
+and the adjacent slot. The factory's process-lifetime hook owner prevents
 repeat selection from installing another callback or losing managed delegate roots.
 Loader's Android smoke Mod exercises actual method patching and recompilation.
 
@@ -52,3 +54,8 @@ successful patch/unpatch, because native exceptions must traverse the hook.
 The same helper carries the known-GUID native ICorJitInfo forwarding table and
 allocation capture. The host PublicationProbe simulates RW-to-RX publication and
 checks both surviving patch bytes and restoration of the original code on Undo.
+
+Run `scripts/test-android-exception-helper.ps1 -DeviceSerial <serial>` with the
+pinned Android NDK and SDK to check zero initialization of fresh thread exception
+slots and retention of existing state. It uses dirty freed allocations and does
+not require an installed application; run on native ARM64 and native-bridge devices.
